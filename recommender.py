@@ -3,8 +3,8 @@ from sklearn.metrics.pairwise import cosine_similarity
 from sklearn.preprocessing import StandardScaler
 
 def load_data():
-    ratings = pd.read_csv("ml-latest-small/ratings.csv")
-    movies = pd.read_csv("ml-latest-small/movies.csv")
+    ratings = pd.read_csv("data/ratings.csv")
+    movies = pd.read_csv("data/movies.csv")
     return ratings, movies
 
 def build_user_movie_matrix(ratings):
@@ -31,3 +31,4 @@ def get_recommendations(movie_title, ratings, movies, similarity_matrix, top_n=5
     recommended_titles = movies[movies['movieId'].isin(top_movies)]['title'].values.tolist()
 
     return recommended_titles
+
