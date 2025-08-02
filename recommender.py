@@ -1,6 +1,5 @@
 import pandas as pd
 from sklearn.metrics.pairwise import cosine_similarity
-from sklearn.preprocessing import StandardScaler
 
 def load_data():
     ratings = pd.read_csv("data/ratings.csv")
@@ -8,27 +7,26 @@ def load_data():
     return ratings, movies
 
 def build_user_movie_matrix(ratings):
+    # Criar matriz user x movie com ratings (NaN preenchidos com 0)
     user_movie_matrix = ratings.pivot_table(index='userId', columns='movieId', values='rating').fillna(0)
     return user_movie_matrix
 
 def build_similarity_matrix(user_movie_matrix):
-    scaler = StandardScaler()
-    normalized = scaler.fit_transform(user_movie_matrix.T)
-    similarity = cosine_similarity(normalized)
-    return pd.DataFrame(similarity, index=user_movie_matrix.columns, columns=user_movie_matrix.columns)
+    # Transpor para movie x user para calcular similaridade entre filmes
+    movie_user_matrix = user_movie_matrix.T
+    similarity = cosine_similarity(movie_user_matrix)
+    return similarity
 
-def get_recommendations(movie_title, ratings, movies, similarity_matrix, top_n=5):
-    movie = movies[movies['title'].str.lower() == movie_title.lower()]
-    if movie.empty:
+def get_recommendations(selected_movie_id, similarity_matrix, user_movie_matrix, n=5):
+    movie_ids = user_movie_matrix.columns.tolist()
+    movie_id_to_index = {movie_id: idx for idx, movie_id in enumerate(movie_ids)}
+
+    if selected_movie_id not in movie_id_to_index:
         return []
 
-    movie_id = movie.iloc[0]['movieId']
-    if movie_id not in similarity_matrix.columns:
-        return []
-
-    similar_scores = similarity_matrix[movie_id].sort_values(ascending=False)
-    top_movies = similar_scores.iloc[1:top_n+1].index
-    recommended_titles = movies[movies['movieId'].isin(top_movies)]['title'].values.tolist()
-
-    return recommended_titles
-
+    idx = movie_id_to_index[selected_movie_id]
+    sim_scores = list(enumerate(similarity_matrix[idx]))
+    sim_scores = sorted(sim_scores, key=lambda x: x[1], reverse=True)[1:n+1]
+    recommended_indices = [i[0] for i in sim_scores]
+    recommended_ids = [movie_ids[i] for i in recommended_indices]
+    return recommended_ids
