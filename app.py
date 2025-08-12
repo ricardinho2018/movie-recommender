@@ -7,7 +7,7 @@ st.title("🎬 Sistema de Recomendação de Filmes")
 # Carregar dados e construir matrizes
 ratings, movies = load_data()
 user_movie_matrix = build_user_movie_matrix(ratings, movies)
-similarity_matrix = build_similarity_matrix(user_movie_matrix)
+
 
 # Interface
 movie_list = movies['title'].sort_values().tolist()
@@ -28,4 +28,5 @@ if st.button("Recomendar"):
             st.write(f"**{title}** — ⭐ {rating}/5")
     else:
         st.write("⚠️ Nenhuma recomendação encontrada.")
+
 
