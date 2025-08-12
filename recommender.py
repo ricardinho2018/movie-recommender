@@ -12,26 +12,32 @@ def build_user_movie_matrix(ratings, movies):
     user_movie_matrix.fillna(0, inplace=True)
     return user_movie_matrix
 
-def build_similarity_matrix(user_movie_matrix):
-    similarity = cosine_similarity(user_movie_matrix.T)
-    return similarity
-
-def get_recommendations(selected_movie, user_movie_matrix, similarity_matrix, movies, ratings, top_n=5):
+def get_recommendations(selected_movie, user_movie_matrix, movies, ratings, top_n=5):
     if selected_movie not in user_movie_matrix.columns:
         return []
 
-    movie_idx = user_movie_matrix.columns.get_loc(selected_movie)
-    similarity_scores = list(enumerate(similarity_matrix[movie_idx]))
-    similarity_scores = sorted(similarity_scores, key=lambda x: x[1], reverse=True)
-    top_similar_indices = [i for i, _ in similarity_scores[1:top_n+1]]
-    recommended_movies = user_movie_matrix.columns[top_similar_indices]
+    # Vetor do filme selecionado
+    movie_vector = user_movie_matrix[selected_movie].values.reshape(1, -1)
+
+    # Calcular similaridade apenas para este filme
+    similarity_scores = cosine_similarity(movie_vector, user_movie_matrix.T)[0]
+
+    # Índices ordenados por similaridade
+    similar_indices = similarity_scores.argsort()[::-1]
+
+    # Ignorar o próprio filme e selecionar top_n
+    top_indices = [i for i in similar_indices if i != user_movie_matrix.columns.get_loc(selected_movie)]
+    top_indices = top_indices[:top_n]
+
+    recommended_movies = user_movie_matrix.columns[top_indices]
 
     # Calcular rating médio
-    avg_ratings = ratings.groupby('movieId')['rating'].mean()
+    avg_ratings = ratings.groupby('movieId')['rating'].mean().to_dict()
+    title_to_id = dict(zip(movies['title'], movies['movieId']))
 
     recommendations = []
     for title in recommended_movies:
-        movie_id = movies[movies['title'] == title]['movieId'].values[0]
+        movie_id = title_to_id.get(title)
         rating = round(avg_ratings.get(movie_id, 0), 2)
         recommendations.append((title, rating))
 
