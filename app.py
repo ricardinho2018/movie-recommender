@@ -1,5 +1,6 @@
 import streamlit as st
-from recommender import load_data, build_user_movie_matrix, build_similarity_matrix, get_recommendations
+from recommender import load_data, build_user_movie_matrix, get_recommendations
+
 
 st.title("🎬 Sistema de Recomendação de Filmes")
 
@@ -27,3 +28,4 @@ if st.button("Recomendar"):
             st.write(f"**{title}** — ⭐ {rating}/5")
     else:
         st.write("⚠️ Nenhuma recomendação encontrada.")
+
